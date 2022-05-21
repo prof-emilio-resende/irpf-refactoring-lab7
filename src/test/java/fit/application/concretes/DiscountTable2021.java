@@ -3,10 +3,11 @@ package fit.application.concretes;
 import fit.application.abstracts.DiscountTable;
 
 public class DiscountTable2021 implements DiscountTable {
+    public static final double EXEMPTION_VALUE = 1903.98;
 
     @Override
     public double getExemptionValue() {
-        return 1903.98;
+        return EXEMPTION_VALUE;
     }
 
     @Override

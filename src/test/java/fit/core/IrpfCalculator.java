@@ -1,22 +1,20 @@
 package fit.core;
 
 import fit.application.abstracts.DiscountTable;
-import fit.application.concretes.DiscountTable2021;
+import fit.application.abstracts.RateTable;
+import fit.application.factories.DiscountTableFactory;
+import fit.application.factories.RateTableFactory;
 import fit.domain.Person;
 
 public class IrpfCalculator {
-    private static final double INSS_VALUE_ALIQUOT = 0.11;
-
     private Person person;
     private double baseSalary = 0;
     private DiscountTable discountTable;
+    private RateTable rateTable;
 
     public IrpfCalculator(int year, Person person) {
-        if (year == 2021)
-            this.discountTable = new DiscountTable2021();
-        else // poderia ter uma tabela padrão ou outra coisa ...
-            this.discountTable = new DiscountTable2021();
-
+        this.discountTable = DiscountTableFactory.build(year);
+        this.rateTable = RateTableFactory.build(year);
         this.person = person;
         this.calculateBaseSalary();
     }
@@ -26,7 +24,7 @@ public class IrpfCalculator {
         if (this.baseSalary == 0)
             this.baseSalary = 
                 this.person.getTotalSalary() 
-                - (this.person.getTotalSalary() * INSS_VALUE_ALIQUOT) 
+                - this.rateTable.getInss(this.person.getTotalSalary())
                 - this.discountTable.getDependentsValue(this.person.getDependentsNumber());
             
         return this.baseSalary;
@@ -37,23 +35,10 @@ public class IrpfCalculator {
     }
 
     public double calculateTaxLayer() {
-        var baseSalary = this.baseSalary;
-
-        if (baseSalary <= 1903.98)
-            return 0.0;
-        if (baseSalary <= 2826.65)
-            return 0.075;
-        if (baseSalary <= 3751.05)
-            return 0.15;
-        if (baseSalary <= 4664.68)
-            return 0.225;
-        return 0.275;
+        return this.rateTable.getRate(this.baseSalary);
     }
 
     public double calculate() {
-        var discountValue = this.calculateDiscount();
-        var taxValue = this.calculateTaxLayer();
-
-        return discountValue * taxValue;
+        return this.calculateDiscount() * this.calculateTaxLayer();
     }
 }
